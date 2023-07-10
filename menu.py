@@ -4,6 +4,11 @@ from glob import glob
 
 folders = []
 
+import time
+
+def pause_screen(seconds):
+    """Pause the screen for the specified number of seconds"""
+    time.sleep(seconds)
 
 def input_validation(prompt, func=None):
     """Validate user input based on provided function"""
@@ -141,44 +146,129 @@ def check_folders():
     return
 
 
-def crop_images():
-    """Crop and export images"""
-    print()
-    confirm_folders = input_validation(
-        "Do you want to verify the list of stored folders? (y/n): ",
-        lambda x: x.lower() in ["y", "yes", "n", "no"],
+def crop_image_selector():
+    """Select and perform image cropping based on user's choice"""
+    print("Which of the crop functions would you like to use?\n\n" 
+          "You can:\n\n"
+          "1. Crop all faces out of images.\n"
+          "2. Crop all eyes out of images.\n"
+          "3. Crop all eyes and noses out of images.\n"
+          "4. Exit crop selection and return to the main menu.\n\n"
+          "Please select your choice by entering a number between 1 to 4.\n")
+  
+    crop_choice = input_validation(
+        "Enter your choice (1-4): ",
+        lambda x: x.isdigit() and 1 <= int(x) <= 4
     )
-    if confirm_folders.lower() in ["y", "yes"]:
-        check_folders()
-    print(
-        "We're getting ready to crop your images! Before we begin, let's make sure everything is set up :)"
-    )
+  
+    if crop_choice == "1":
+        crop_faces()
+    elif crop_choice == "2":
+        crop_eyes()
+    elif crop_choice == "3":
+        crop_eyes_noses()
+    elif crop_choice == "4":
+        print("Returning to the main menu...")
+        return
+    else:
+        print("Invalid choice. Please select a number between 1 and 4.")
+        seconds = 3
+        pause_screen(seconds)
+        crop_image_selector()
+
+def crop_faces():
+    """Crop and export faces from images"""
+    print("We're getting ready to crop faces from your images! Before we begin, let's make sure everything is set up :)")
+  
     for folder in folders:
         input_folder = folder
         output_folder = "{}_cropped".format(folder)
 
-    if not os.path.exists(output_folder):
-        os.makedirs(output_folder)
+        if not os.path.exists(output_folder):
+            os.makedirs(output_folder)
 
-    for filename in glob(os.path.join(input_folder, "*.jpg")):
-        try:
-            imagePath = filename
-            face_cascade = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
-            img = cv2.imread(imagePath)
-            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-            faces = face_cascade.detectMultiScale(gray, 1.3, 5)
-            for x, y, w, h in faces:
-                cropped = img[y : y + h, x : x + w]
-                cv2.imshow("cropped", cropped)
-                cv2.waitKey(0)
-                cv2.imwrite(
-                    os.path.join(output_folder, os.path.basename(filename)), cropped
-                )
-        except:
-            print("Error processing image: {}".format(filename))
+        for filename in glob(os.path.join(input_folder, "*.jpg")):
+            try:
+                imagePath = filename
+                face_cascade = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
+                img = cv2.imread(imagePath)
+                gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+                faces = face_cascade.detectMultiScale(gray, 1.3, 5)
+                for x, y, w, h in faces:
+                    cropped = img[y : y + h, x : x + w]
+                    cv2.imshow("cropped", cropped)
+                    cv2.waitKey(0)
+                    cv2.imwrite(
+                        os.path.join(output_folder, os.path.basename(filename)), cropped
+                    )
+            except:
+                print("Error processing image: {}".format(filename))
     print("Image cropping completed successfully!")
-    return
 
+def crop_eyes():
+    """Crop and export eyes from images"""
+    print("We're getting ready to crop eyes from your images! Before we begin, let's make sure everything is set up :)")
+
+    for folder in folders:
+        input_folder = folder
+        output_folder = "{}_cropped_eyes".format(folder)
+
+        if not os.path.exists(output_folder):
+            os.makedirs(output_folder)
+
+        eye_cascade = cv2.CascadeClassifier("haarcascade_eye.xml")
+
+        for filename in glob(os.path.join(input_folder, "*.jpg")):
+            try:
+                imagePath = filename
+                img = cv2.imread(imagePath)
+                gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+                eyes = eye_cascade.detectMultiScale(gray)
+                for x, y, w, h in eyes:
+                    cropped = img[y: y + h, x: x + w]
+                    cv2.imshow("cropped", cropped)
+                    cv2.waitKey(0)
+                    cv2.imwrite(os.path.join(output_folder, os.path.basename(filename)), cropped)
+            except:
+                print("Error processing image: {}".format(filename))
+    print("Image cropping completed successfully!")
+
+def crop_eyes_noses():
+    """Crop and export eyes and noses from images"""
+    print("We're getting ready to crop eyes and noses from your images! Before we begin, let's make sure everything is set up :)")
+
+    for folder in folders:
+        input_folder = folder
+        output_folder = "{}_cropped_eyes_noses".format(folder)
+
+        if not os.path.exists(output_folder):
+            os.makedirs(output_folder)
+
+        eye_cascade = cv2.CascadeClassifier("haarcascade_eye.xml")
+        nose_cascade = cv2.CascadeClassifier("haarcascade_mcs_nose.xml")
+
+        for filename in glob(os.path.join(input_folder, "*.jpg")):
+            try:
+                imagePath = filename
+                img = cv2.imread(imagePath)
+                gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+                eyes = eye_cascade.detectMultiScale(gray)
+                noses = nose_cascade.detectMultiScale(gray)
+
+                for x, y, w, h in eyes:
+                    cropped = img[y: y + h, x: x + w]
+                    cv2.imshow("cropped", cropped)
+                    cv2.waitKey(0)
+                    cv2.imwrite(os.path.join(output_folder, os.path.basename(filename)), cropped)
+
+                for x, y, w, h in noses:
+                    cropped = img[y: y + h, x: x + w]
+                    cv2.imshow("cropped", cropped)
+                    cv2.waitKey(0)
+                    cv2.imwrite(os.path.join(output_folder, os.path.basename(filename)), cropped)
+            except:
+                print("Error processing image: {}".format(filename))
+    print("Image cropping completed successfully!")
 
 def main():
     """Main menu"""
@@ -197,7 +287,7 @@ def main():
         elif option == 2:
             check_folders()
         elif option == 3:
-            crop_images()
+            crop_image_selector()
         else:
             exit()
 

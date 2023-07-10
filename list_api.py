@@ -1,7 +1,7 @@
 import dropbox
 
 def list_files_in_folder(folder_path):
-    dbx = dropbox.Dropbox('<ACCESS_TOKEN>')
+    dbx = dropbox.Dropbox('<ACCESS TOKEN>')
     try:
         print('the loop gets in here')
         files = dbx.files_list_folder(folder_path).entries
