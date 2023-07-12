@@ -1,6 +1,7 @@
 import cv2
 import os
 from glob import glob
+from tqdm import tqdm 
 
 folders = []
 
@@ -176,10 +177,15 @@ def crop_image_selector():
         pause_screen(seconds)
         crop_image_selector()
 
+from tqdm import tqdm
+
 def crop_faces():
     """Crop and export faces from images"""
     print("We're getting ready to crop faces from your images! Before we begin, let's make sure everything is set up :)")
-  
+    
+    total_files = sum(len(files) for _, _, files in os.walk('.')) - 2  # Excluding current file and directories
+    processed_files = 0
+    
     for folder in folders:
         input_folder = folder
         output_folder = "{}_cropped".format(folder)
@@ -187,7 +193,7 @@ def crop_faces():
         if not os.path.exists(output_folder):
             os.makedirs(output_folder)
 
-        for filename in glob(os.path.join(input_folder, "*.jpg")):
+        for filename in tqdm(glob(os.path.join(input_folder, "*.jpg"))):
             try:
                 imagePath = filename
                 face_cascade = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
@@ -201,14 +207,23 @@ def crop_faces():
                     cv2.imwrite(
                         os.path.join(output_folder, os.path.basename(filename)), cropped
                     )
+                processed_files += 1
+                percentage = int((processed_files / total_files) * 100)
+                tqdm.write("Processing: {}%".format(percentage))
             except:
                 print("Error processing image: {}".format(filename))
+    
     print("Image cropping completed successfully!")
+
+from tqdm import tqdm
 
 def crop_eyes():
     """Crop and export eyes from images"""
     print("We're getting ready to crop eyes from your images! Before we begin, let's make sure everything is set up :)")
-
+    
+    total_files = sum(len(files) for _, _, files in os.walk('.')) - 2  # Excluding current file and directories
+    processed_files = 0
+    
     for folder in folders:
         input_folder = folder
         output_folder = "{}_cropped_eyes".format(folder)
@@ -218,7 +233,7 @@ def crop_eyes():
 
         eye_cascade = cv2.CascadeClassifier("haarcascade_eye.xml")
 
-        for filename in glob(os.path.join(input_folder, "*.jpg")):
+        for filename in tqdm(glob(os.path.join(input_folder, "*.jpg"))):
             try:
                 imagePath = filename
                 img = cv2.imread(imagePath)
@@ -229,14 +244,23 @@ def crop_eyes():
                     cv2.imshow("cropped", cropped)
                     cv2.waitKey(0)
                     cv2.imwrite(os.path.join(output_folder, os.path.basename(filename)), cropped)
+                processed_files += 1
+                percentage = int((processed_files / total_files) * 100)
+                tqdm.write("Processing: {}%".format(percentage))
             except:
                 print("Error processing image: {}".format(filename))
+    
     print("Image cropping completed successfully!")
+
+from tqdm import tqdm
 
 def crop_eyes_noses():
     """Crop and export eyes and noses from images"""
     print("We're getting ready to crop eyes and noses from your images! Before we begin, let's make sure everything is set up :)")
-
+    
+    total_files = sum(len(files) for _, _, files in os.walk('.')) - 2  # Excluding current file and directories
+    processed_files = 0
+    
     for folder in folders:
         input_folder = folder
         output_folder = "{}_cropped_eyes_noses".format(folder)
@@ -247,7 +271,7 @@ def crop_eyes_noses():
         eye_cascade = cv2.CascadeClassifier("haarcascade_eye.xml")
         nose_cascade = cv2.CascadeClassifier("haarcascade_mcs_nose.xml")
 
-        for filename in glob(os.path.join(input_folder, "*.jpg")):
+        for filename in tqdm(glob(os.path.join(input_folder, "*.jpg"))):
             try:
                 imagePath = filename
                 img = cv2.imread(imagePath)
@@ -266,8 +290,12 @@ def crop_eyes_noses():
                     cv2.imshow("cropped", cropped)
                     cv2.waitKey(0)
                     cv2.imwrite(os.path.join(output_folder, os.path.basename(filename)), cropped)
+                processed_files += 1
+                percentage = int((processed_files / total_files) * 100)
+                tqdm.write("Processing: {}%".format(percentage))
             except:
                 print("Error processing image: {}".format(filename))
+    
     print("Image cropping completed successfully!")
 
 def main():
