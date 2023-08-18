@@ -33,7 +33,7 @@ def retrieve_folder_from_windows():
         
         selected = input("Enter the number of the sub-folder you want to open (or 'q' to exit): ")
         if selected.lower() == 'q':
-            break
+            main()
         
         if selected.isdigit() and 1 <= int(selected) <= len(folders_in_path):
             idx = int(selected) - 1
@@ -42,10 +42,6 @@ def retrieve_folder_from_windows():
             add_to_list = input(f"Do you want to add {os.path.basename(folders_in_path[idx])} to the evaluation list? (y/n): ")
             if add_to_list.lower() == 'y':
                 folders.append(folders_in_path[idx])
-        
-    print("\nFolders added for evaluation:")
-    for folder in folders:
-        print(os.path.basename(folder))  # Only print the folder name, not the full path
     
 
 def pause_screen(seconds):
@@ -104,16 +100,15 @@ def search_folders():
             print("Invalid input. Please try again.")
             continue
         elif confirm.lower() in ["y", "yes"]:
-            folders.append(folder_name)
             print("This is the full list of folders", folders)
             
-            add_more = input_validation(
-                "Add more folders? (y/n): ", lambda x: x.lower() in ["y", "yes", "n", "no"]
+            search_more_folders = input_validation(
+                "Search for more folders? (y/n): ", lambda x: x.lower() in ["y", "yes", "n", "no"]
             )
-            if add_more is None:
+            if search_more_folders is None:
                 print("Invalid input. Please try again.")
                 continue
-            elif add_more.lower() in ["y", "yes"]:
+            elif search_more_folders.lower() in ["y", "yes"]:
                 continue
             else:
                 break
@@ -125,6 +120,8 @@ def check_folders():
     """Check stored folder names"""
     print()
     print("Let's see which folders you have stored!")
+    if len(folders)== 0:
+       print("You have nothing stored! Returning to main menu.")
     if len(folders) > 0:
         print("Folders: ")
         for folder in folders:
@@ -141,22 +138,7 @@ def check_folders():
             )
             if option == 1:
                 while True:
-                    try:
-                        folder_name = input_validation(
-                            "Please type in the folder that you want to add: ",
-                            validate_folder_name,
-                        )
-                        folders.append(folder_name)
-                        add_more = input_validation(
-                            "Would you like to add another folder to the list? (y/n): ",
-                            lambda x: x.lower() in ["y", "yes", "n", "no"],
-                        )
-                        if add_more.lower() in ["y", "yes"]:
-                            continue
-                        else:
-                            break
-                    except:
-                        print("Invalid input. Please try again.")
+                    retrieve_folder_from_windows()
             elif option == 2:
                 remove_option = int(
                     input_validation(
