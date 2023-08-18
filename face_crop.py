@@ -82,41 +82,14 @@ def choose_option():
             print("Invalid input. Please try again.")
 
 
+def print_folders():
+    if(len(folders) > 0):
+       print("This is the full list of folders to crop the images of:", folders)
+    else:
+        print("The list of folders to crop the images of is empty! Going back to main menu.")
+    
+
 def search_folders():
-    """Search for folder name"""
-    print()
-    print("What folder did you want to search for?")
-    while True:
-        folder_name = input_validation("Folder name: ", validate_folder_name)
-        if folder_name is None:
-            print("Invalid input. Please try again.")
-            continue
-        print("Validated folder name:", folder_name)
-        
-        confirm = input_validation(
-            "Confirm? (y/n): ", lambda x: x.lower() in ["y", "yes", "n", "no"]
-        )
-        if confirm is None:
-            print("Invalid input. Please try again.")
-            continue
-        elif confirm.lower() in ["y", "yes"]:
-            print("This is the full list of folders", folders)
-            
-            search_more_folders = input_validation(
-                "Search for more folders? (y/n): ", lambda x: x.lower() in ["y", "yes", "n", "no"]
-            )
-            if search_more_folders is None:
-                print("Invalid input. Please try again.")
-                continue
-            elif search_more_folders.lower() in ["y", "yes"]:
-                continue
-            else:
-                break
-        else:
-            print("Please try again.")
-
-
-def check_folders():
     """Check stored folder names"""
     print()
     print("Let's see which folders you have stored!")
@@ -167,6 +140,7 @@ def check_folders():
         print(
             "Oh! It looks like the folders are empty! If you want to perform some *magic* on the folders you will need to tell me which ones to work on!"
         )
+        print("Going back to main menu.")
     return
 
 
@@ -321,7 +295,7 @@ def main():
         print()
         print("****************************************************************************")
         print("***********************1. Add folders to be evaluated **********************")
-        print("***********************2. Search for folder name ***************************")
+        print("***********************2. Print folder names *******************************")
         print("***********************3. Check stored folder names ************************")
         print("***********************4. Crop and export images ***************************")
         print("***********************5. Exit *********************************************")
@@ -331,9 +305,9 @@ def main():
         if option == 1:
             retrieve_folder_from_windows()
         if option == 2:
-            search_folders()
+            print_folders()
         elif option == 3:
-            check_folders()
+            search_folders()
         elif option == 4:
             crop_image_selector()
         else:
