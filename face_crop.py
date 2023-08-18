@@ -1,11 +1,52 @@
 import cv2
 import os
+import re
 from glob import glob
 from tqdm import tqdm 
+import time
 
 folders = []
 
-import time
+def validate_input(in_str):
+    # Check if the string contains only alphabets, numbers, spaces, hyphens and underscores
+    if bool(re.match("^[a-zA-Z0-9 _-]*$", in_str)):
+        return True
+    else:
+        return False
+
+def list_folders(folder_path):
+    try:
+        return [os.path.join(folder_path, name) for name in os.listdir(folder_path) if os.path.isdir(os.path.join(folder_path, name))]
+    except Exception as e:
+        print(e)
+        return []
+
+def retrieve_folder_from_windows():
+    folder_path = input("Enter the path of the root directory you want to start from: ")
+    
+    while True:
+        folders_in_path = list_folders(folder_path)
+
+        print(f"\nFolders in {folder_path}:")
+        for i, folder in enumerate(folders_in_path):
+            print(f"{i+1}. {os.path.basename(folder)}")  # Only print the folder name, not the full path
+        
+        selected = input("Enter the number of the sub-folder you want to open (or 'q' to exit): ")
+        if selected.lower() == 'q':
+            break
+        
+        if selected.isdigit() and 1 <= int(selected) <= len(folders_in_path):
+            idx = int(selected) - 1
+            folder_path = folders_in_path[idx]  # Select the new folder path
+            
+            add_to_list = input(f"Do you want to add {os.path.basename(folders_in_path[idx])} to the evaluation list? (y/n): ")
+            if add_to_list.lower() == 'y':
+                folders.append(folders_in_path[idx])
+        
+    print("\nFolders added for evaluation:")
+    for folder in folders:
+        print(os.path.basename(folder))  # Only print the folder name, not the full path
+    
 
 def pause_screen(seconds):
     """Pause the screen for the specified number of seconds"""
@@ -33,14 +74,14 @@ def validate_folder_name(name):
 def choose_option():
     """Prompt user for main menu option"""
     print()
-    prompt = "Please choose an option (1-4): "
+    prompt = "Please choose an option (1-5): "
     while True:
         try:
             option = int(input_validation(prompt))
-            if option in [1, 2, 3, 4]:
+            if option in [1, 2, 3, 4, 5]:
                 return option
             else:
-                print("Please choose between options 1 to 4.")
+                print("Please choose between options 1 to 5.")
         except:
             print("Invalid input. Please try again.")
 
@@ -177,8 +218,6 @@ def crop_image_selector():
         pause_screen(seconds)
         crop_image_selector()
 
-from tqdm import tqdm
-
 def crop_faces():
     """Crop and export faces from images"""
     print("We're getting ready to crop faces from your images! Before we begin, let's make sure everything is set up :)")
@@ -215,8 +254,6 @@ def crop_faces():
     
     print("Image cropping completed successfully!")
 
-from tqdm import tqdm
-
 def crop_eyes():
     """Crop and export eyes from images"""
     print("We're getting ready to crop eyes from your images! Before we begin, let's make sure everything is set up :)")
@@ -251,8 +288,6 @@ def crop_eyes():
                 print("Error processing image: {}".format(filename))
     
     print("Image cropping completed successfully!")
-
-from tqdm import tqdm
 
 def crop_eyes_noses():
     """Crop and export eyes and noses from images"""
@@ -303,22 +338,24 @@ def main():
     while True:
         print()
         print("****************************************************************************")
-        print("***********************1. Search for folder name ***************************")
-        print("***********************2. Check stored folder names ************************")
-        print("***********************3. Crop and export images ***************************")
-        print("***********************4. Exit *********************************************")
+        print("***********************1. Add folders to be evaluated **********************")
+        print("***********************2. Search for folder name ***************************")
+        print("***********************3. Check stored folder names ************************")
+        print("***********************4. Crop and export images ***************************")
+        print("***********************5. Exit *********************************************")
         print("****************************************************************************")
         print()
         option = choose_option()
         if option == 1:
+            retrieve_folder_from_windows()
+        if option == 2:
             search_folders()
-        elif option == 2:
-            check_folders()
         elif option == 3:
+            check_folders()
+        elif option == 4:
             crop_image_selector()
         else:
             exit()
-
 
 if __name__ == "__main__":
     main()
