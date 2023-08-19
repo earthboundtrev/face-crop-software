@@ -1,9 +1,10 @@
-import cv2
 import os
+import cv2
 import re
 from glob import glob
 from tqdm import tqdm 
 import time
+import numpy as np
 
 folders = []
 
@@ -70,14 +71,14 @@ def validate_folder_name(name):
 def choose_option():
     """Prompt user for main menu option"""
     print()
-    prompt = "Please choose an option (1-5): "
+    prompt = "Please choose an option (1-6): "
     while True:
         try:
             option = int(input_validation(prompt))
-            if option in [1, 2, 3, 4, 5]:
+            if option in [1, 2, 3, 4, 5, 6]:
                 return option
             else:
-                print("Please choose between options 1 to 5.")
+                print("Please choose between options 1 to 6.")
         except:
             print("Invalid input. Please try again.")
 
@@ -88,6 +89,45 @@ def print_folders():
     else:
         print("The list of folders to crop the images of is empty! Going back to main menu.")
     
+def remove_folders():
+    """Remove specified folders based on partial string matches"""
+    if len(folders) < 1:
+        print("There are no elements in the list! Returning to the main menu.")
+        main()
+
+    print("What folder did you want to remove?")
+    while True:
+        try:
+            folder_name = input_validation("Folder name: ", validate_folder_name)
+            matching_folders = []
+
+            for folder in folders:
+                if folder_name.lower() in folder.lower():
+                    matching_folders.append(folder)
+
+            if len(matching_folders) == 0:
+                print("No matching folders found.")
+            else:
+                print("Matching folders:")
+                for folder in matching_folders:
+                    print(folder)
+
+                confirm = input_validation("Confirm removal? (y/n): ", lambda x: x.lower() in ['y', 'yes', 'n', 'no'])
+                if confirm.lower() in ['y', 'yes']:
+                    for folder in matching_folders:
+                        folders.remove(folder)
+
+            add_more = input_validation("Remove more folders? (y/n): ", lambda x: x.lower() in ['y', 'yes', 'n', 'no'])
+            if add_more.lower() in ['y', 'yes']:
+                continue
+            else:
+                break
+        except:
+            print("Incorrect input was inserted. Please try again.")
+
+    if len(folders) < 1:
+        print("There are no elements in the list! Returning to the main menu.")
+        main()
 
 def search_folders():
     """Check stored folder names"""
@@ -178,12 +218,11 @@ def crop_faces():
     """Crop and export faces from images"""
     print("We're getting ready to crop faces from your images! Before we begin, let's make sure everything is set up :)")
     
-    total_files = sum(len(files) for _, _, files in os.walk('.')) - 2  # Excluding current file and directories
     processed_files = 0
     
     for folder in folders:
         input_folder = folder
-        output_folder = "{}_cropped".format(folder)
+        output_folder = "{}_cropped_faces".format(folder)
 
         if not os.path.exists(output_folder):
             os.makedirs(output_folder)
@@ -191,20 +230,19 @@ def crop_faces():
         for filename in tqdm(glob(os.path.join(input_folder, "*.jpg"))):
             try:
                 imagePath = filename
-                face_cascade = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
+                relative_path_face_XML = "haarscascade_frontface_default.xml"
+                absolute_path = os.path.abspath(relative_path_face_XML)
+                face_cascade = cv2.CascadeClassifier(absolute_path)
                 img = cv2.imread(imagePath)
                 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
                 faces = face_cascade.detectMultiScale(gray, 1.3, 5)
                 for x, y, w, h in faces:
                     cropped = img[y : y + h, x : x + w]
-                    cv2.imshow("cropped", cropped)
-                    cv2.waitKey(0)
                     cv2.imwrite(
                         os.path.join(output_folder, os.path.basename(filename)), cropped
                     )
                 processed_files += 1
-                percentage = int((processed_files / total_files) * 100)
-                tqdm.write("Processing: {}%".format(percentage))
+                tqdm.write("Processing file number: {}".format(processed_files))
             except:
                 print("Error processing image: {}".format(filename))
     
@@ -214,7 +252,6 @@ def crop_eyes():
     """Crop and export eyes from images"""
     print("We're getting ready to crop eyes from your images! Before we begin, let's make sure everything is set up :)")
     
-    total_files = sum(len(files) for _, _, files in os.walk('.')) - 2  # Excluding current file and directories
     processed_files = 0
     
     for folder in folders:
@@ -224,7 +261,9 @@ def crop_eyes():
         if not os.path.exists(output_folder):
             os.makedirs(output_folder)
 
-        eye_cascade = cv2.CascadeClassifier("haarcascade_eye.xml")
+        relative_path_eye_XML = "haarscascade_eye.xml"
+        absolute_path = os.path.abspath(relative_path_eye_XML)
+        eye_cascade = cv2.CascadeClassifier(absolute_path)
 
         for filename in tqdm(glob(os.path.join(input_folder, "*.jpg"))):
             try:
@@ -234,12 +273,9 @@ def crop_eyes():
                 eyes = eye_cascade.detectMultiScale(gray)
                 for x, y, w, h in eyes:
                     cropped = img[y: y + h, x: x + w]
-                    cv2.imshow("cropped", cropped)
-                    cv2.waitKey(0)
                     cv2.imwrite(os.path.join(output_folder, os.path.basename(filename)), cropped)
                 processed_files += 1
-                percentage = int((processed_files / total_files) * 100)
-                tqdm.write("Processing: {}%".format(percentage))
+                tqdm.write("Processing file number: {}".format(processed_files))
             except:
                 print("Error processing image: {}".format(filename))
     
@@ -249,7 +285,6 @@ def crop_eyes_noses():
     """Crop and export eyes and noses from images"""
     print("We're getting ready to crop eyes and noses from your images! Before we begin, let's make sure everything is set up :)")
     
-    total_files = sum(len(files) for _, _, files in os.walk('.')) - 2  # Excluding current file and directories
     processed_files = 0
     
     for folder in folders:
@@ -259,8 +294,12 @@ def crop_eyes_noses():
         if not os.path.exists(output_folder):
             os.makedirs(output_folder)
 
-        eye_cascade = cv2.CascadeClassifier("haarcascade_eye.xml")
-        nose_cascade = cv2.CascadeClassifier("haarcascade_mcs_nose.xml")
+        relative_path_eye_XML = "haarscascade_eye.xml"
+        absolute_path_eye = os.path.abspath(relative_path_eye_XML)
+        eye_cascade = cv2.CascadeClassifier(absolute_path_eye)
+        relative_path_nose_XML = "haarscascade_mcs_nose.xml"
+        absolute_path_nose = os.path.abspath(relative_path_nose_XML)
+        nose_cascade = cv2.CascadeClassifier(absolute_path_nose)
 
         for filename in tqdm(glob(os.path.join(input_folder, "*.jpg"))):
             try:
@@ -272,18 +311,13 @@ def crop_eyes_noses():
 
                 for x, y, w, h in eyes:
                     cropped = img[y: y + h, x: x + w]
-                    cv2.imshow("cropped", cropped)
-                    cv2.waitKey(0)
                     cv2.imwrite(os.path.join(output_folder, os.path.basename(filename)), cropped)
 
                 for x, y, w, h in noses:
                     cropped = img[y: y + h, x: x + w]
-                    cv2.imshow("cropped", cropped)
-                    cv2.waitKey(0)
                     cv2.imwrite(os.path.join(output_folder, os.path.basename(filename)), cropped)
                 processed_files += 1
-                percentage = int((processed_files / total_files) * 100)
-                tqdm.write("Processing: {}%".format(percentage))
+                tqdm.write("Processing file number: {}".format(processed_files))
             except:
                 print("Error processing image: {}".format(filename))
     
@@ -295,20 +329,23 @@ def main():
         print()
         print("****************************************************************************")
         print("***********************1. Add folders to be evaluated **********************")
-        print("***********************2. Print folder names *******************************")
-        print("***********************3. Check stored folder names ************************")
-        print("***********************4. Crop and export images ***************************")
-        print("***********************5. Exit *********************************************")
+        print("***********************2. Remove folders from list *************************")
+        print("***********************3. Print folder names *******************************")
+        print("***********************4. Check stored folder names ************************")
+        print("***********************5. Crop and export images ***************************")
+        print("***********************6. Exit *********************************************")
         print("****************************************************************************")
         print()
         option = choose_option()
         if option == 1:
             retrieve_folder_from_windows()
         if option == 2:
+            remove_folders()
+        if option == 3:
             print_folders()
-        elif option == 3:
-            search_folders()
         elif option == 4:
+            search_folders()
+        elif option == 5:
             crop_image_selector()
         else:
             exit()
